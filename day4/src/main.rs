@@ -8,39 +8,56 @@ use std::collections::HashSet;
 use regex::Regex;
 
 struct Validator {
+  passport: HashSet<String>,
+  num_passports: i32,
+  num_valid_passports: i32
+}
 
+impl Validator {
+  pub fn new() -> Validator {
+    Validator {
+      passport: HashSet::new(),
+      num_passports: 0,
+      num_valid_passports: 0
+    }
+  }
+
+  fn validate_passport(&mut self) {
+    let is_valid =
+      self.passport.len() == 8 ||
+      (self.passport.len() == 7 && !self.passport.contains("cid"));
+    if is_valid {
+      self.num_valid_passports += 1
+    }
+    self.num_passports += 1
+  }
+
+  pub fn parse(&mut self, filename: &str) -> (i32, i32) {
+    let re = Regex::new(r"(\w+):\S+").unwrap();
+
+    let file = File::open(filename)
+      .expect("This should have been a file?!");
+    for line in io::BufReader::new(file).lines() {
+      if let Ok(line) = line {
+        // println!("{}", line);
+        for cap in re.captures_iter(&line) {
+          let key = String::from(&cap[1]);
+          self.passport.insert(key);
+        }
+
+        if line.chars().count() == 0 {
+          self.validate_passport();
+          self.passport = HashSet::new();
+        }
+      }
+    }
+    self.validate_passport();
+    return (self.num_passports, self.num_valid_passports)
+  }
 }
 
 fn main() {
-  let file = File::open("input.txt")
-    .expect("This should have been a file?!");
-
-  let re = Regex::new(r"(\w+):\S+").unwrap();
-
-  let mut passport = HashSet::new();
-  let mut num_passwports = 0;
-  let mut num_valid_passwports = 0;
-  for line in io::BufReader::new(file).lines() {
-    if let Ok(line) = line {
-      println!("{}", line);
-      for cap in re.captures_iter(&line) {
-        // println!("cap: {}, {}", &cap[0], &cap[1]);
-        let key = String::from(&cap[1]);
-        passport.insert(key);
-      }
-
-      if line.chars().count() == 0 {
-        let is_valid = passport.len() == 8 || (passport.len() == 7 && !passport.contains("cid"));
-        if is_valid {
-          num_valid_passwports += 1
-        }
-        num_passwports += 1;
-        passport = HashSet::new();
-        // println!("we're done with a password, {}, has cid: {}", passport.len(), passport.contains("cid"));
-        // return;
-      }
-      println!("\n")
-    }
-  }
-  println!("we found {} passports, {} have been valid.", num_passwports, num_valid_passwports)
+  let mut validator = Validator::new();
+  let (passports, valid_passports) = validator.parse("input.txt");
+  println!("we found {} passports, {} have been valid.", passports, valid_passports)
 }
