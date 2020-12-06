@@ -17,14 +17,12 @@ impl Seat {
     }
 
     fn binary_partition(chars: &Vec<char>, length: usize, offset: usize, upper: char) -> i32 {
-      let mut max: i32 = (2 << (length - 1)) - 1;
-      let mut result = 0;
-
-      for i in 0..length {
-        max /= 2;
-        result += if chars[offset + i] == upper { max + 1} else { 0 };
-      }
-      return result
+      (offset..(offset + length)).fold(0, |total, next|
+        if chars[next] == upper {
+          (total << 1) | 1
+        } else {
+          (total << 1) & !1
+        }) as i32
     }
 
     let chars: Vec<_> = config.chars().collect();
