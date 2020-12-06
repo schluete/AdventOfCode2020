@@ -16,20 +16,32 @@ impl Seat {
       return Err("Invalid seat configuration")
     }
 
-    fn binary_partition(chars: &Vec<char>, length: usize, offset: usize, upper: char) -> i32 {
-      (offset..(offset + length)).fold(0, |total, next|
-        if chars[next] == upper {
-          (total << 1) | 1
-        } else {
-          (total << 1) & !1
-        }) as i32
-    }
+    let value = i32::from_str_radix(
+      &config
+        .replace("B", "1")
+        .replace("F", "0")
+        .replace("R", "1")
+        .replace("L", "0"), 2).unwrap();
 
-    let chars: Vec<_> = config.chars().collect();
     Ok(Seat {
-      row: binary_partition(&chars, 7, 0, 'B'),
-      col: binary_partition(&chars, 3, 7, 'R')
+      row: (value & 0x3f8) >> 3,
+      col: value & 0x7
     })
+
+    // fn binary_partition(chars: &Vec<char>, length: usize, offset: usize, upper: char) -> i32 {
+    //   (offset..(offset + length)).fold(0, |total, next|
+    //     if chars[next] == upper {
+    //       (total << 1) | 1
+    //     } else {
+    //       (total << 1) & !1
+    //     }) as i32
+    // }
+
+    // let chars: Vec<_> = config.chars().collect();
+    // Ok(Seat {
+    //   row: binary_partition(&chars, 7, 0, 'B'),
+    //   col: binary_partition(&chars, 3, 7, 'R')
+    // })
   }
 
   pub fn seat_id(&self) -> i32 {
