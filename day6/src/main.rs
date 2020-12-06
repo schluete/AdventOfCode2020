@@ -7,19 +7,29 @@ use std::io::{self, BufRead};
 use std::collections::HashSet;
 
 struct Group {
-  questions: HashSet<char>
+  questions: HashSet<char>,
+  is_first_person: bool
 }
 
 impl Group {
   pub fn new() -> Group {
     Group {
-      questions: HashSet::new()
+      questions: HashSet::new(),
+      is_first_person: true
     }
   }
 
   pub fn add_person(&mut self, line: &String) {
+    let mut questions = HashSet::new();
     for c in line.chars() {
-      self.questions.insert(c);
+      questions.insert(c);
+    }
+
+    if self.is_first_person {
+      self.questions = questions;
+      self.is_first_person = false
+    } else {
+      self.questions = self.questions.intersection(&questions).cloned().collect()
     }
   }
 
